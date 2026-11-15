@@ -1,0 +1,811 @@
+
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Taxi Moto Tunisia 🇹🇳</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f2f4f8;color:#101d35}
+button{border:0;border-radius:12px;padding:12px;font-weight:bold;font-size:15px;cursor:pointer;margin:3px}
+input,select,textarea{width:100%;padding:12px;margin:7px 0;border:1px solid #ddd;border-radius:10px;font-size:16px}
+
+/* الخلفية الجديدة: طريق وموتورات */
+.hero{
+ min-height:100vh;
+ padding:22px;
+ background:linear-gradient(#101d3580,#101d35ed),
+ url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1600&q=85') center/cover;
+ color:white;
+ display:flex;
+ flex-direction:column;
+ justify-content:space-between;
+ text-align:center
+}
+.logo{font-size:32px;font-weight:bold;letter-spacing:2px}
+.orange{color:#ff9000}.flag{font-size:75px}.welcome{margin:auto 0}.motor{font-size:80px}
+.buttons{display:grid;gap:10px;max-width:450px;width:100%;margin:auto}
+.clientBtn{background:#ff9000;color:white}.driverBtn{background:white;color:#101d35}.adminBtn{background:#dce5f3;color:#101d35}
+
+/* نفس الخلفية في الصفحات الداخلية */
+.page{
+ display:none;
+ min-height:100vh;
+ padding:15px;
+ background:linear-gradient(#101d35b8,#101d35e8),
+ url('https://images.unsplash.com/photo-1558981806-ec527fa84c39?auto=format&fit=crop&w=1600&q=85') center/cover fixed
+}
+.card{background:#fffffff7;padding:17px;border-radius:18px;margin:12px 0;box-shadow:0 5px 18px #0002}
+.primary{background:#ff9000;color:white;width:100%;margin-top:10px}
+.back{background:#101d35;color:white;width:100%}
+.green{background:#18864b;color:white}.red{background:#c93636;color:white}.blue{background:#1769aa;color:white}
+.whatsapp{background:#18864b;color:white;width:100%;margin-top:10px}
+.map{height:300px;border-radius:12px;margin:12px 0;z-index:1}
+.info{background:#fff4e5;padding:12px;border-radius:10px;margin:10px 0;line-height:1.8}
+.item{background:#f3f5f9;padding:13px;border-radius:12px;margin:10px 0;line-height:1.8;overflow-wrap:anywhere}
+.muted{color:#777;font-size:13px;line-height:1.7}
+.price{color:#18864b;font-size:22px;font-weight:bold}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat{background:#101d35;color:white;padding:15px;border-radius:13px;text-align:center}
+.stat b{display:block;font-size:23px;color:#ff9000;margin-top:8px}
+.sectionTitle{border-right:4px solid #ff9000;padding-right:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:120px}
+.hide{display:none!important}
+.auth-title{color:#ff9000}
+body.dark{background:#101d35;color:white}
+body.dark .card{background:#172b46;color:white}
+body.dark .item{background:#263c59;color:white}
+body.dark input,body.dark select,body.dark textarea{background:#203650;color:white;border-color:#53677d}
+</style>
+</head>
+<body>
+
+<section class="hero" id="home">
+ <div><div class="logo">TAXI <span class="orange">MOTO</span></div><div class="flag">🇹🇳</div></div>
+ <div class="welcome">
+  <div class="motor">🛵</div>
+  <h1>TAXI MOTO TUNISIA</h1>
+  <p>تنقّل سريع وسهل وين ما تحب</p>
+  <p>مرحبا بيك في تونس 🇹🇳</p>
+ </div>
+ <div class="buttons">
+  <button class="clientBtn" onclick="openPage('client')">👤 فضاء الحريف</button>
+  <button class="driverBtn" onclick="openPage('driverLogin')">🏍️ فضاء السائق</button>
+  <button class="adminBtn" onclick="openPage('adminLogin')">🔐 Mosrati المسؤول</button>
+  <button class="adminBtn" onclick="toggleTheme()">🌙 الوضع الليلي</button>
+  <button class="whatsapp" onclick="contactAdmin()">📞 اتصل بالمسؤول WhatsApp</button>
+ </div>
+</section>
+
+<section class="page" id="client">
+ <button class="back" onclick="goHome()">رجوع للرئيسية</button>
+ <div class="card" id="clientAuthBox">
+  <h2>👤 حساب الحريف</h2>
+  <h3 class="auth-title">إنشاء حساب جديد</h3>
+  <input id="clientRegisterName" placeholder="الاسم الكامل">
+  <input id="clientRegisterPhone" placeholder="رقم الهاتف" type="tel">
+  <input id="clientRegisterPass" placeholder="كلمة السر" type="password">
+  <input id="clientRegisterConfirm" placeholder="تأكيد كلمة السر" type="password">
+  <button class="primary" onclick="registerClient()">إنشاء حساب</button>
+  <hr>
+  <h3 class="auth-title">تسجيل الدخول</h3>
+  <input id="clientLoginPhone" placeholder="رقم الهاتف" type="tel">
+  <input id="clientLoginPass" placeholder="كلمة السر" type="password">
+  <button class="primary" onclick="loginClient()">دخول</button>
+  <button class="whatsapp" onclick="forgotClientPassword()">نسيت كلمة السر؟ WhatsApp</button>
+  <p id="clientAuthMessage"></p>
+ </div>
+
+ <div class="card hide" id="clientAccountBox">
+  <h3>مرحبا <span id="clientAccountName"></span> 👋</h3>
+  <p id="clientAccountPhone"></p>
+  <button class="red" onclick="logoutClient()">تسجيل الخروج</button>
+ </div>
+
+ <div id="clientFeatures" class="hide">
+  <div class="card">
+   <h2>🇹🇳 فضاء الحريف</h2>
+   <p>اختار مكان الانطلاق والوجهة.</p>
+   <button class="blue" onclick="locateMe()">📍 حدّد موقعي الحالي GPS</button>
+   <div id="clientMap" class="map"></div>
+   <div id="mapHelp" class="info">اضغط GPS أو اختار الانطلاق على الخريطة، وبعد اختار الوجهة.</div>
+   <p>📍 الانطلاق: <b id="fromText">لم يتم الاختيار</b></p>
+   <p>🏁 الوجهة: <b id="toText">لم يتم الاختيار</b></p>
+   <div id="routeInfo"></div>
+   <h3 class="sectionTitle">معلومات الحريف</h3>
+   <input id="clientName" placeholder="اسمك" readonly>
+   <input id="clientPhone" placeholder="رقم هاتفك" readonly>
+   <label>موعد الرحلة</label>
+   <select id="bookingType" onchange="toggleBooking()">
+    <option value="now">الآن</option>
+    <option value="later">حجز مسبق</option>
+   </select>
+   <input id="bookingTime" type="datetime-local" class="hide">
+   <label>طريقة الدفع</label>
+   <select id="payment"><option>نقداً</option></select>
+   <label>ملاحظات</label>
+   <textarea id="clientNotes" placeholder="ملاحظات اختيارية"></textarea>
+   <button class="primary" onclick="orderRide()">🏍️ اطلب موتور</button>
+   <div id="clientResult"></div>
+  </div>
+
+  <div class="card">
+   <h3 class="sectionTitle">⭐ طلباتي وتقييماتي</h3>
+   <div id="clientRequests"></div>
+  </div>
+
+  <div class="card">
+   <h3 class="sectionTitle">📌 الأماكن المفضلة</h3>
+   <input id="favName" placeholder="اسم المكان (الدار / الخدمة)">
+   <input id="favAddress" placeholder="العنوان">
+   <button class="primary" onclick="saveFavorite()">حفظ المكان</button>
+   <div id="favorites"></div>
+  </div>
+
+  <div class="card">
+   <h3 class="sectionTitle">📝 شكوى أو مساعدة</h3>
+   <input id="complaintPhone" placeholder="رقم هاتفك" readonly>
+   <textarea id="complaintText" placeholder="اكتب الشكوى أو الاستفسار"></textarea>
+   <button class="primary" onclick="sendComplaint()">إرسال الشكوى</button>
+   <div id="complaintResult"></div>
+  </div>
+ </div>
+</section>
+
+<section class="page" id="driverLogin">
+ <button class="back" onclick="goHome()">رجوع للرئيسية</button>
+ <div class="card">
+  <h2>🏍️ فضاء السائق</h2>
+  <input id="driverPhone" placeholder="رقم الهاتف">
+  <input id="driverPass" type="password" placeholder="كلمة السر">
+  <button class="primary" onclick="loginDriver()">دخول</button>
+  <p id="driverError"></p>
+  <hr>
+  <h3>طلب الانضمام كسائق</h3>
+  <input id="applyName" placeholder="اسمك">
+  <input id="applyPhone" placeholder="رقم الهاتف">
+  <textarea id="applyInfo" placeholder="نوع الدراجة ومعلومات إضافية"></textarea>
+  <button class="primary" onclick="applyDriver()">إرسال طلب الانضمام</button>
+  <p id="applyResult"></p>
+ </div>
+</section>
+
+<section class="page" id="driverPanel">
+ <button class="back" onclick="driverLogout()">خروج</button>
+ <div class="card">
+  <h2>🏍️ لوحة السائق</h2>
+  <p id="driverWelcome"></p>
+  <div class="row">
+   <button class="green" onclick="toggleDriverOnline()">متصل / غير متصل</button>
+   <span id="driverOnline" class="info">غير متصل</span>
+  </div>
+  <div class="stats">
+   <div class="stat">الرحلات المكتملة<b id="driverCount">0</b></div>
+   <div class="stat">مداخيلي<b id="driverIncome">0 د.ت</b></div>
+  </div>
+ </div>
+ <div class="card"><h3 class="sectionTitle">🔔 الطلبات الجديدة</h3><div id="driverRequests"></div></div>
+ <div class="card"><h3 class="sectionTitle">🛵 رحلاتي</h3><div id="driverMyRequests"></div></div>
+</section>
+
+<section class="page" id="adminLogin">
+ <button class="back" onclick="goHome()">رجوع للرئيسية</button>
+ <div class="card">
+  <h2>👑 by mosrati </h2>
+  <div id="adminRegisterBox">
+   <h3>إنشاء حساب مسؤول أول مرة</h3>
+   <input id="adminName" placeholder="اسم المسؤول">
+   <input id="adminPhone" placeholder="رقم الهاتف">
+   <input id="adminNewPass" type="password" placeholder="كلمة السر">
+   <input id="adminConfirmPass" type="password" placeholder="تأكيد كلمة السر">
+   <button class="primary" onclick="registerAdmin()">إنشاء الحساب</button>
+  </div>
+  <div id="adminLoginBox" class="hide">
+   <h3>تسجيل الدخول</h3>
+   <p id="adminWelcome"></p>
+   <input id="adminLoginPhone" placeholder="رقم الهاتف">
+   <input id="adminPass" type="password" placeholder="كلمة السر">
+   <button class="primary" onclick="loginAdmin()">دخول الإدارة</button>
+  </div>
+  <p id="adminError"></p>
+ </div>
+</section>
+
+<section class="page" id="adminPanel">
+ <button class="back" onclick="goHome()">خروج</button>
+ <div class="card">
+  <h2>👑 by mosrat </h2>
+  <div class="stats">
+   <div class="stat">كل الطلبات<b id="totalRequests">0</b></div>
+   <div class="stat">مكتملة<b id="completedRequests">0</b></div>
+   <div class="stat">المداخيل<b id="totalIncome">0 د.ت</b></div>
+   <div class="stat">العمولات<b id="totalCommission">0 د.ت</b></div>
+  </div>
+ </div>
+
+ <div class="card">
+  <h3 class="sectionTitle">⚙️ إعدادات الأسعار</h3>
+  <label>سعر الكيلومتر بالدينار</label><input id="pricePerKm" type="number" step="0.1">
+  <label>الحد الأدنى للسفرة</label><input id="minPrice" type="number" step="0.1">
+  <label>العمولة %</label><input id="commission" type="number">
+  <button class="primary" onclick="saveSettings()">حفظ الأسعار</button>
+  <p id="settingsResult"></p>
+ </div>
+
+ <div class="card">
+  <h3 class="sectionTitle">➕ إضافة سائق</h3>
+  <input id="newName" placeholder="اسم السائق">
+  <input id="newPhone" placeholder="رقم هاتف السائق">
+  <input id="newPassword" type="password" placeholder="كلمة سر السائق">
+  <button class="primary" onclick="addDriver()">إضافة السائق</button>
+  <p id="addResult"></p>
+ </div>
+
+ <div class="card"><h3 class="sectionTitle">🏍️ قائمة السائقين</h3><div id="driversList"></div></div>
+
+ <div class="card">
+  <h3 class="sectionTitle">📋 جميع الطلبات</h3>
+  <div class="row">
+   <button class="blue" onclick="exportCSV()">تصدير CSV</button>
+   <button class="blue" onclick="backupData()">نسخة احتياطية JSON</button>
+   <button class="blue" onclick="$('restoreFile').click()">استرجاع نسخة</button>
+   <input id="restoreFile" type="file" accept=".json,application/json" class="hide" onchange="restoreData(event)">
+  </div>
+  <div id="adminRequests"></div>
+ </div>
+
+ <div class="card"><h3 class="sectionTitle">📝 الشكاوى</h3><div id="adminComplaints"></div></div>
+ <div class="card">
+  <h3 class="sectionTitle">📨 إعلان للحرفاء</h3>
+  <textarea id="announcementText" placeholder="اكتب الإعلان"></textarea>
+  <button class="primary" onclick="publishAnnouncement()">نشر الإعلان</button>
+  <p id="announcementResult"></p>
+  <div id="announcementView"></div>
+ </div>
+ <div class="card"><h3 class="sectionTitle">طلبات انضمام السائقين</h3><div id="applications"></div></div>
+ <div class="card"><button class="red" onclick="clearAllData()">حذف جميع بيانات التطبيق</button></div>
+</section>
+
+<div class="card muted" style="margin:15px">
+ تنبيه: هذه نسخة تجريبية تحفظ البيانات في نفس المتصفح فقط. لا يوجد تزامن بين الهواتف أو تتبع حي أو إشعارات حقيقية. كلمات السر غير مشفّرة في هذه النسخة. لا تستعمل كلمات سر حقيقية.
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const read=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))??d}catch(e){return d}};
+const write=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const getRides=()=>read('taxiRequests',[]);
+const getDrivers=()=>read('taxiDrivers',[]);
+const getSettings=()=>read('taxiSettings',{pricePerKm:.8,minPrice:2,commission:10});
+
+let driver=null,online=false,map=null,from=null,to=null,m1=null,m2=null,line=null,route=null;
+let clientUser=null;
+
+function openPage(id){
+ document.querySelectorAll('.page,.hero').forEach(x=>x.style.display='none');
+ $(id).style.display='block';
+ if(id==='client'){
+  updateClientView();
+  setTimeout(()=>{
+   initMap();
+   if(map)map.invalidateSize();
+  },300);
+ }
+ if(id==='adminLogin')checkAdmin();
+ if(id==='adminPanel'){loadSettings();renderAdmin()}
+ if(id==='driverPanel')renderDriver();
+ window.scrollTo(0,0);
+}
+function goHome(){
+ document.querySelectorAll('.page').forEach(x=>x.style.display='none');
+ $('home').style.display='flex';
+ driver=null;
+}
+function contactAdmin(){
+ window.open('https://wa.me/21623348531?text='+encodeURIComponent('السلام عليكم، عندي استفسار حول Taxi Moto Tunisia'),'_blank');
+}
+function toggleTheme(){
+ document.body.classList.toggle('dark');
+ localStorage.setItem('taxiDark',document.body.classList.contains('dark')?'1':'0');
+}
+if(localStorage.getItem('taxiDark')==='1')document.body.classList.add('dark');
+function toggleBooking(){
+ $('bookingTime').classList.toggle('hide',$('bookingType').value!=='later');
+}
+
+/* حساب الحريف */
+function getClients(){return read('taxiClients',[])}
+function getClientFavorites(){
+ return read('taxiFavorites_'+clientUser.phone,[]);
+}
+function registerClient(){
+ let name=$('clientRegisterName').value.trim();
+ let phone=$('clientRegisterPhone').value.trim();
+ let pass=$('clientRegisterPass').value;
+ let confirmPass=$('clientRegisterConfirm').value;
+ let msg=$('clientAuthMessage');
+
+ if(!name||!phone||!pass||!confirmPass){
+  msg.innerText='عمر جميع الخانات';return;
+ }
+ if(pass.length<6){
+  msg.innerText='كلمة السر لازمها 6 أحرف على الأقل';return;
+ }
+ if(pass!==confirmPass){
+  msg.innerText='كلمتا السر غير متطابقتين';return;
+ }
+ let clients=getClients();
+ if(clients.some(c=>c.phone===phone)){
+  msg.innerText='رقم الهاتف مسجل من قبل';return;
+ }
+ clients.push({id:Date.now(),name,phone,password:pass});
+ write('taxiClients',clients);
+ $('clientLoginPhone').value=phone;
+ $('clientLoginPass').value='';
+ $('clientRegisterPass').value='';
+ $('clientRegisterConfirm').value='';
+ msg.innerText='تم إنشاء الحساب بنجاح! سجّل الدخول توا.';
+}
+function loginClient(){
+ let phone=$('clientLoginPhone').value.trim();
+ let pass=$('clientLoginPass').value;
+ let user=getClients().find(c=>c.phone===phone&&c.password===pass);
+ if(!user){
+  $('clientAuthMessage').innerText='رقم الهاتف أو كلمة السر غالطة';
+  return;
+ }
+ clientUser=user;
+ updateClientView();
+ $('clientAuthMessage').innerText='';
+ renderClient();
+ renderFavorites();
+}
+function updateClientView(){
+ let logged=!!clientUser;
+ $('clientAuthBox').classList.toggle('hide',logged);
+ $('clientAccountBox').classList.toggle('hide',!logged);
+ $('clientFeatures').classList.toggle('hide',!logged);
+ if(logged){
+  $('clientAccountName').innerText=clientUser.name;
+  $('clientAccountPhone').innerText=clientUser.phone;
+  $('clientName').value=clientUser.name;
+  $('clientPhone').value=clientUser.phone;
+  /* إصلاح: حذفنا searchClientPhone لأنه غير موجود في الصفحة */
+  $('complaintPhone').value=clientUser.phone;
+ }
+}
+function logoutClient(){
+ clientUser=null;
+ updateClientView();
+ $('clientLoginPass').value='';
+ $('clientRegisterPass').value='';
+ $('clientRegisterConfirm').value='';
+ $('clientRequests').innerHTML='';
+ $('favorites').innerHTML='';
+ $('clientResult').innerHTML='';
+}
+function forgotClientPassword(){
+ let phone=$('clientLoginPhone').value.trim();
+ if(!phone){
+  $('clientAuthMessage').innerText='اكتب رقم هاتفك أولاً';
+  return;
+ }
+ let message='السلام عليكم، نحب مساعدة في استرجاع حساب Taxi Moto Tunisia. رقم الهاتف: '+phone;
+ window.open('https://wa.me/21623348531?text='+encodeURIComponent(message),'_blank');
+}
+
+/* المسؤول */
+function checkAdmin(){
+ let a=read('taxiAdmin',null);
+ $('adminRegisterBox').classList.toggle('hide',!!a);
+ $('adminLoginBox').classList.toggle('hide',!a);
+ if(a)$('adminWelcome').innerText='مرحبا '+a.name;
+}
+function registerAdmin(){
+ let name=$('adminName').value.trim(),phone=$('adminPhone').value.trim();
+ let p=$('adminNewPass').value,c=$('adminConfirmPass').value;
+ if(!name||!phone||!p||!c)return $('adminError').innerText='عمر جميع الخانات';
+ if(p.length<6)return $('adminError').innerText='كلمة السر لازمها 6 حروف على الأقل';
+ if(p!==c)return $('adminError').innerText='كلمتا السر غير متطابقتين';
+ if(read('taxiAdmin',null))return $('adminError').innerText='حساب المسؤول موجود';
+ write('taxiAdmin',{name,phone,password:p});
+ checkAdmin();
+ $('adminLoginPhone').value=phone;
+ $('adminError').innerText='تم إنشاء الحساب، سجّل الدخول.';
+}
+function loginAdmin(){
+ let a=read('taxiAdmin',null);
+ if(a&&$('adminLoginPhone').value.trim()===a.phone&&$('adminPass').value===a.password)openPage('adminPanel');
+ else $('adminError').innerText='معلومات الدخول غير صحيحة';
+}
+function loadSettings(){
+ let s=getSettings();
+ $('pricePerKm').value=s.pricePerKm;
+ $('minPrice').value=s.minPrice;
+ $('commission').value=s.commission;
+}
+function saveSettings(){
+ let s={pricePerKm:Number($('pricePerKm').value),minPrice:Number($('minPrice').value),commission:Number($('commission').value)};
+ if(!Object.values(s).every(Number.isFinite)||s.pricePerKm<0||s.minPrice<0||s.commission<0||s.commission>100)return alert('ثبت الأسعار والعمولة');
+ write('taxiSettings',s);
+ $('settingsResult').innerText='تم حفظ الإعدادات';
+ renderAdmin();
+}
+
+/* الخريطة */
+function initMap(){
+ if(!window.L)return;
+ if(map){map.invalidateSize();return}
+ map=L.map('clientMap').setView([36.8065,10.1815],12);
+ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+ map.on('click',e=>pickPoint([e.latlng.lat,e.latlng.lng]));
+}
+function clearRoute(){
+ if(line){map.removeLayer(line);line=null}
+}
+function setStartPoint(p){
+ from=p;to=null;route=null;
+ if(m1)map.removeLayer(m1);
+ if(m2)map.removeLayer(m2);
+ clearRoute();
+ m1=L.marker(p).addTo(map);m2=null;
+ $('fromText').innerText=p.map(n=>n.toFixed(5)).join(', ');
+ $('toText').innerText='لم يتم الاختيار';
+ $('routeInfo').innerHTML='';
+}
+function pickPoint(p){
+ if(!from){
+  setStartPoint(p);
+  $('mapHelp').innerText='تم تحديد الانطلاق. اختار الوجهة.';
+ }else if(!to){
+  to=p;m2=L.marker(p).addTo(map);
+  $('toText').innerText=p.map(n=>n.toFixed(5)).join(', ');
+  calculateRoute();
+ }else{
+  setStartPoint(p);
+  $('mapHelp').innerText='تبدّل الانطلاق. اختار الوجهة.';
+ }
+}
+function locateMe(){
+ if(!navigator.geolocation)return alert('GPS غير متوفر في المتصفح');
+ $('mapHelp').innerText='جاري تحديد موقعك...';
+ navigator.geolocation.getCurrentPosition(pos=>{
+  let p=[pos.coords.latitude,pos.coords.longitude];
+  setStartPoint(p);map.setView(p,16);
+  $('mapHelp').innerText='تم تحديد موقعك. اختار الوجهة.';
+ },()=>alert('اسمح للمتصفح باستعمال GPS وتثبت من الإعدادات.'),{enableHighAccuracy:true,timeout:15000});
+}
+async function calculateRoute(){
+ try{
+  $('mapHelp').innerText='جاري حساب المسافة...';
+  let url=`https://router.project-osrm.org/route/v1/driving/${from[1]},${from[0]};${to[1]},${to[0]}?overview=full&geometries=geojson`;
+  let d=await(await fetch(url)).json();
+  if(!d.routes?.length)throw Error('route');
+  let r=d.routes[0],s=getSettings(),km=r.distance/1000;
+  let fare=Math.max(s.minPrice,km*s.pricePerKm);
+  route={distance:+km.toFixed(2),minutes:Math.ceil(r.duration/60),fare:+fare.toFixed(2),commission:+(fare*s.commission/100).toFixed(2)};
+  clearRoute();
+  line=L.geoJSON(r.geometry,{style:{color:'#ff9000',weight:5}}).addTo(map);
+  map.fitBounds(line.getBounds());
+  $('routeInfo').innerHTML=`<div class="info">المسافة التقديرية: ${route.distance} كم<br>الوقت التقريبي: ${route.minutes} دقيقة<br>السعر التقديري: <b class="price">${route.fare} د.ت</b></div>`;
+  $('mapHelp').innerText='تم حساب المسافة والسعر.';
+ }catch(e){
+  route=null;
+  $('mapHelp').innerText='تعذر حساب الطريق. جرّب نقاط أخرى أو تحقق من الإنترنت.';
+ }
+}
+
+/* طلب الرحلة */
+function orderRide(){
+ if(!clientUser)return alert('لازم تسجل الدخول قبل طلب الرحلة');
+ let name=clientUser.name,phone=clientUser.phone;
+ $('clientName').value=name;
+ $('clientPhone').value=phone;
+ if(!from||!to||!route||!Number.isFinite(route.fare)||!Number.isFinite(route.distance))return alert('اختار الانطلاق والوجهة واستنى حساب السعر');
+ let scheduled=null;
+ if($('bookingType').value==='later'){
+  scheduled=$('bookingTime').value;
+  if(!scheduled||new Date(scheduled)<=new Date())return alert('اختار موعد في المستقبل');
+ }
+ let pin=String(Math.floor(1000+Math.random()*9000));
+ let a=getRides();
+ a.push({
+  id:Date.now(),name,phone,from:from.join(','),to:to.join(','),
+  fromLat:from[0],fromLng:from[1],toLat:to[0],toLng:to[1],
+  distance:route.distance,minutes:route.minutes,fare:route.fare,
+  commission:route.commission,status:'جديد',driverId:null,
+  driverName:'',driverPhone:'',rating:0,pin,
+  payment:$('payment').value,notes:$('clientNotes').value,
+  scheduled,created:new Date().toISOString()
+ });
+ write('taxiRequests',a);
+ $('clientResult').innerHTML=`<div class="info">تم تسجيل الطلب محلياً. رمز تأكيد الرحلة متاعك: <b>${pin}</b>. ما تعطيه للسائق كان وقت بداية الرحلة.</div>`;
+ renderClient();
+}
+function renderClient(){
+ if(!clientUser){
+  $('clientRequests').innerHTML='سجّل الدخول لعرض طلباتك';
+  return;
+ }
+ let a=getRides().filter(r=>r.phone===clientUser.phone);
+ $('clientRequests').innerHTML=a.map(r=>`
+ <div class="item">
+  <b>طلب ${r.id}</b><br>
+  من: ${esc(r.from)}<br>إلى: ${esc(r.to)}<br>
+  السعر: ${r.fare} د.ت<br>
+  الحالة: <b>${esc(r.status)}</b><br>
+  ${r.scheduled?'الموعد: '+esc(r.scheduled):'الطلب للآن'}<br>
+  ${r.driverName?'السائق: '+esc(r.driverName):''}<br>
+  ${['جديد','مقبولة','السائق وصل','جارية'].includes(r.status)?'رمز الرحلة: <b>'+esc(r.pin)+'</b>':''}
+  ${r.status==='جديد'?`<button class="red" onclick="cancelRide(${r.id})">إلغاء الطلب</button>`:''}
+  ${r.status==='مكتملة'&&!r.rating?[1,2,3,4,5].map(n=>`<button onclick="rateRide(${r.id},${n})">⭐${n}</button>`).join(''):''}
+  ${r.rating?'تقييمك: '+'⭐'.repeat(r.rating):''}
+ </div>`).join('')||'ما فماش طلبات بهذا الحساب';
+}
+function cancelRide(id){
+ let reason=prompt('اكتب سبب الإلغاء:');if(reason===null)return;
+ let a=getRides(),r=a.find(x=>x.id===id);
+ if(!r||r.status!=='جديد'||r.phone!==clientUser?.phone)return alert('ما تنجمش تلغي الطلب');
+ r.status='ملغاة';r.cancelReason=reason;
+ write('taxiRequests',a);renderClient();
+}
+function rateRide(id,n){
+ let a=getRides(),r=a.find(x=>x.id===id);
+ if(!r||r.status!=='مكتملة'||r.rating||r.phone!==clientUser?.phone)return;
+ r.rating=n;write('taxiRequests',a);renderClient();
+}
+function openMaps(a,b,c,d){
+ if(![a,b,c,d].every(Number.isFinite))return alert('الإحداثيات غير متوفرة');
+ window.open(`https://www.google.com/maps/dir/${a},${b}/${c},${d}`,'_blank');
+}
+function chat(phone){
+ let n=String(phone).replace(/\D/g,'');
+ if(n.startsWith('0'))n='216'+n.slice(1);
+ else if(!n.startsWith('216'))n='216'+n;
+ window.open('https://wa.me/'+n,'_blank');
+}
+
+/* الأماكن المفضلة */
+function saveFavorite(){
+ if(!clientUser)return alert('سجّل الدخول أولاً');
+ let name=$('favName').value.trim(),address=$('favAddress').value.trim();
+ if(!name||!address)return alert('اكتب اسم المكان والعنوان');
+ let key='taxiFavorites_'+clientUser.phone;
+ let a=read(key,[]);
+ a.push({id:Date.now(),name,address});
+ write(key,a);
+ $('favName').value='';$('favAddress').value='';
+ renderFavorites();
+}
+function renderFavorites(){
+ if(!clientUser){$('favorites').innerHTML='';return}
+ let a=getClientFavorites();
+ $('favorites').innerHTML=a.map(f=>`
+ <div class="item"><b>${esc(f.name)}</b>: ${esc(f.address)}
+ <button class="red" onclick="deleteFavorite(${f.id})">حذف</button></div>
+ `).join('')||'ما فماش أماكن محفوظة';
+}
+function deleteFavorite(id){
+ if(!clientUser)return;
+ let key='taxiFavorites_'+clientUser.phone;
+ write(key,read(key,[]).filter(f=>f.id!==id));
+ renderFavorites();
+}
+
+/* الشكاوى وطلبات السائقين */
+function sendComplaint(){
+ if(!clientUser)return alert('سجّل الدخول أولاً');
+ let phone=clientUser.phone;
+ let message=$('complaintText').value.trim();
+ if(!message)return alert('اكتب الشكوى');
+ let a=read('taxiComplaints',[]);
+ a.push({id:Date.now(),phone,message,status:'جديدة',date:new Date().toLocaleString('ar-TN')});
+ write('taxiComplaints',a);
+ $('complaintResult').innerText='تم حفظ الشكوى في هذا المتصفح.';
+ $('complaintText').value='';
+}
+function applyDriver(){
+ let name=$('applyName').value.trim(),phone=$('applyPhone').value.trim(),info=$('applyInfo').value.trim();
+ if(!name||!phone)return alert('اكتب الاسم ورقم الهاتف');
+ let a=read('taxiApplications',[]);
+ a.push({id:Date.now(),name,phone,info,status:'قيد المراجعة'});
+ write('taxiApplications',a);
+ $('applyResult').innerText='تم تسجيل طلب الانضمام على هذا الجهاز.';
+}
+
+/* السائقون */
+function addDriver(){
+ let name=$('newName').value.trim(),phone=$('newPhone').value.trim(),password=$('newPassword').value;
+ if(!name||!phone||!password)return alert('عمر جميع الخانات');
+ let a=getDrivers();
+ if(a.some(d=>d.phone===phone))return alert('رقم الهاتف موجود');
+ a.push({id:Date.now(),name,phone,password,active:true,online:false});
+ write('taxiDrivers',a);
+ $('newName').value='';$('newPhone').value='';$('newPassword').value='';
+ $('addResult').innerText='تمت إضافة السائق';
+ renderAdmin();
+}
+function loginDriver(){
+ let phone=$('driverPhone').value.trim(),pass=$('driverPass').value;
+ let d=getDrivers().find(x=>x.phone===phone&&x.password===pass);
+ if(!d||!d.active){
+  $('driverError').innerText='معلومات الدخول غالطة أو الحساب متوقف';return;
+ }
+ driver=d;online=!!d.online;openPage('driverPanel');
+}
+function driverLogout(){
+ if(driver){
+  let a=getDrivers(),d=a.find(x=>x.id===driver.id);
+  if(d)d.online=false;
+  write('taxiDrivers',a);
+ }
+ driver=null;online=false;goHome();
+}
+function toggleDriverOnline(){
+ if(!driver)return;
+ online=!online;
+ let a=getDrivers(),d=a.find(x=>x.id===driver.id);
+ if(d)d.online=online;
+ write('taxiDrivers',a);renderDriver();
+}
+function renderDriver(){
+ if(!driver)return;
+ let a=getRides(),mine=a.filter(r=>r.driverId===driver.id),done=mine.filter(r=>r.status==='مكتملة');
+ $('driverWelcome').innerText='مرحبا '+driver.name;
+ $('driverOnline').innerText=online?'🟢 متصل':'⚪ غير متصل';
+ $('driverCount').innerText=done.length;
+ $('driverIncome').innerText=done.reduce((s,r)=>s+r.fare-r.commission,0).toFixed(2)+' د.ت';
+ $('driverRequests').innerHTML=online?a.filter(r=>r.status==='جديد').map(r=>`
+ <div class="item"><b>طلب جديد</b><br>
+ الحريف: ${esc(r.name)}<br>الهاتف: ${esc(r.phone)}<br>
+ من: ${esc(r.from)}<br>إلى: ${esc(r.to)}<br>
+ السعر: ${r.fare} د.ت<br>
+ <button class="blue" onclick="openMaps(${r.fromLat},${r.fromLng},${r.toLat},${r.toLng})">فتح الخريطة</button>
+ <button class="green" onclick="acceptRide(${r.id})">قبول الرحلة</button></div>
+ `).join('')||'ما فماش طلبات جديدة':'فعّل الاتصال باش تشوف الطلبات';
+ $('driverMyRequests').innerHTML=mine.filter(r=>r.status!=='مكتملة'&&r.status!=='ملغاة').map(r=>`
+ <div class="item"><b>رحلة ${r.id}</b><br>
+ الحريف: ${esc(r.name)}<br>الوجهة: ${esc(r.to)}<br>الحالة: ${esc(r.status)}<br>
+ ${r.status==='مقبولة'?`<button class="primary" onclick="markArrived(${r.id})">وصلت للحريف</button>`:''}
+ ${r.status==='السائق وصل'?`<label>أدخل PIN اللي يعطيهولك الحريف</label><input id="pin-${r.id}" inputmode="numeric" placeholder="رمز الرحلة"><button class="primary" onclick="startRide(${r.id})">تأكيد بداية الرحلة</button>`:''}
+ ${r.status==='جارية'?`<button class="green" onclick="finishRide(${r.id})">إتمام الرحلة</button>`:''}
+ </div>`).join('')||'ما عندك حتى رحلة جارية';
+}
+function acceptRide(id){
+ if(!driver||!online)return alert('لازم تكون متصل');
+ let a=getRides(),r=a.find(x=>x.id===id);
+ if(!r||r.status!=='جديد')return alert('الطلب ما عادش متاح');
+ r.status='مقبولة';r.driverId=driver.id;r.driverName=driver.name;r.driverPhone=driver.phone;
+ write('taxiRequests',a);renderDriver();
+}
+function markArrived(id){
+ let a=getRides(),r=a.find(x=>x.id===id);
+ if(!r||r.driverId!==driver?.id)return;
+ r.status='السائق وصل';write('taxiRequests',a);renderDriver();
+}
+function startRide(id){
+ let a=getRides(),r=a.find(x=>x.id===id),pin=$('pin-'+id)?.value.trim();
+ if(!r||r.driverId!==driver?.id)return;
+ if(pin!==r.pin)return alert('رمز الرحلة غير صحيح');
+ r.status='جارية';write('taxiRequests',a);renderDriver();
+}
+function finishRide(id){
+ let a=getRides(),r=a.find(x=>x.id===id);
+ if(!r||r.driverId!==driver?.id||r.status!=='جارية')return;
+ r.status='مكتملة';r.completedAt=new Date().toISOString();
+ write('taxiRequests',a);renderDriver();
+}
+
+/* لوحة المسؤول */
+function renderAdmin(){
+ let ds=getDrivers(),rs=getRides(),done=rs.filter(r=>r.status==='مكتملة');
+ $('totalRequests').innerText=rs.length;
+ $('completedRequests').innerText=done.length;
+ $('totalIncome').innerText=done.reduce((s,r)=>s+r.fare,0).toFixed(2)+' د.ت';
+ $('totalCommission').innerText=done.reduce((s,r)=>s+r.commission,0).toFixed(2)+' د.ت';
+ $('driversList').innerHTML=ds.map(d=>`
+ <div class="item"><b>${esc(d.name)}</b><br>${esc(d.phone)}<br>
+ الحالة: ${d.active?'نشط':'متوقف'} — ${d.online?'متصل':'غير متصل'}<br>
+ <button class="green" onclick="toggleDriver(${d.id})">${d.active?'إيقاف':'تفعيل'}</button>
+ <button class="red" onclick="deleteDriver(${d.id})">حذف</button></div>
+ `).join('')||'ما فماش سائقين';
+ $('adminRequests').innerHTML=rs.slice().reverse().map(r=>`
+ <div class="item"><b>طلب ${r.id}</b><br>
+ الحريف: ${esc(r.name)} — ${esc(r.phone)}<br>
+ المسافة: ${r.distance} كم — السعر: ${r.fare} د.ت<br>
+ الحالة: ${esc(r.status)}<br>السائق: ${esc(r.driverName||'غير معيّن')}<br>
+ ${r.cancelReason?'سبب الإلغاء: '+esc(r.cancelReason):''}</div>
+ `).join('')||'ما فماش طلبات';
+ $('adminComplaints').innerHTML=read('taxiComplaints',[]).map(c=>`
+ <div class="item">رقم: ${esc(c.phone)}<br>${esc(c.message)}<br>
+ الحالة: ${esc(c.status)}<br>
+ <button class="green" onclick="resolveComplaint(${c.id})">تمت المعالجة</button></div>
+ `).join('')||'ما فماش شكاوى';
+ $('applications').innerHTML=read('taxiApplications',[]).map(x=>`
+ <div class="item"><b>${esc(x.name)}</b> — ${esc(x.phone)}<br>
+ ${esc(x.info)}<br>${esc(x.status)}<br>
+ <button class="green" onclick="approveApplication(${x.id})">قبول وإضافة كسائق</button></div>
+ `).join('')||'ما فماش مطالب';
+ $('announcementView').innerText=read('taxiAnnouncement','لا يوجد إعلان حالياً');
+}
+function toggleDriver(id){
+ let a=getDrivers(),d=a.find(x=>x.id===id);
+ if(d)d.active=!d.active;
+ write('taxiDrivers',a);renderAdmin();
+}
+function deleteDriver(id){
+ if(!confirm('متأكد تحب تحذف السائق؟'))return;
+ write('taxiDrivers',getDrivers().filter(d=>d.id!==id));renderAdmin();
+}
+function resolveComplaint(id){
+ let a=read('taxiComplaints',[]),c=a.find(x=>x.id===id);
+ if(c)c.status='تمت المعالجة';
+ write('taxiComplaints',a);renderAdmin();
+}
+function approveApplication(id){
+ let apps=read('taxiApplications',[]),x=apps.find(a=>a.id===id);
+ if(!x)return;
+ let pass=prompt('عيّن كلمة سر مؤقتة للسائق:');
+ if(!pass)return;
+ let ds=getDrivers();
+ if(ds.some(d=>d.phone===x.phone))return alert('السائق موجود مسبقاً');
+ ds.push({id:Date.now(),name:x.name,phone:x.phone,password:pass,active:true,online:false});
+ write('taxiDrivers',ds);x.status='تم القبول';
+ write('taxiApplications',apps);renderAdmin();
+}
+function publishAnnouncement(){
+ let t=$('announcementText').value.trim();
+ if(!t)return alert('اكتب الإعلان');
+ write('taxiAnnouncement',t);
+ $('announcementResult').innerText='تم حفظ الإعلان';renderAdmin();
+}
+
+/* النسخ الاحتياطي والتصدير */
+function exportCSV(){
+ let rows=[['ID','Client','Phone','From','To','Distance','Fare','Status','Driver'],
+ ...getRides().map(r=>[r.id,r.name,r.phone,r.from,r.to,r.distance,r.fare,r.status,r.driverName])];
+ let csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\n');
+ let blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+ let url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='taxi-moto-report.csv';a.click();URL.revokeObjectURL(url);
+}
+function backupData(){
+ let keys=['taxiRequests','taxiDrivers','taxiSettings','taxiAdmin','taxiComplaints','taxiApplications','taxiAnnouncement','taxiClients'];
+ let obj={};
+ keys.forEach(k=>obj[k]=localStorage.getItem(k));
+ Object.keys(localStorage).filter(k=>k.startsWith('taxiFavorites_')).forEach(k=>obj[k]=localStorage.getItem(k));
+ obj.taxiFavorites=localStorage.getItem('taxiFavorites');
+ let blob=new Blob([JSON.stringify(obj,null,2)],{type:'application/json'});
+ let url=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=url;a.download='taxi-moto-backup.json';a.click();URL.revokeObjectURL(url);
+}
+function restoreData(e){
+ let file=e.target.files[0];if(!file)return;
+ if(!confirm('استرجاع النسخة ينجم يبدّل بياناتك الحالية. متأكد؟')){e.target.value='';return}
+ let reader=new FileReader();
+ reader.onload=()=>{
+  try{
+   let obj=JSON.parse(reader.result);
+   Object.keys(obj).forEach(k=>{
+    if(k.startsWith('taxi')){
+     if(obj[k]===null)localStorage.removeItem(k);
+     else localStorage.setItem(k,obj[k]);
+    }
+   });
+   alert('تم الاسترجاع');renderAdmin();
+  }catch(err){alert('ملف النسخة غير صالح')}
+ };
+ reader.readAsText(file);
+}
+function clearAllData(){
+ if(!confirm('تحذير: سيتم حذف جميع بيانات التطبيق من هذا المتصفح. متأكد؟'))return;
+ Object.keys(localStorage).filter(k=>k.startsWith('taxi')).forEach(k=>localStorage.removeItem(k));
+ alert('تم حذف البيانات المحلية');location.reload();
+}
+</script>
+</body>
+</html>
